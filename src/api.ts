@@ -99,12 +99,8 @@ export const api = {
 
   leave: (id: string) => request<Database>(`/challenges/${id}/leave`, { method: "POST" }),
 
-  submit: (input: {
-    challengeId: string;
-    type: ModerationType;
-    note: string;
-    proofImage?: string;
-  }) => request<Database>("/submissions", { method: "POST", body: JSON.stringify(input) }),
+  submit: (input: { challengeId: string; note: string; proofImage?: string }) =>
+    request<Database>("/submissions", { method: "POST", body: JSON.stringify(input) }),
 
   approveSubmission: (id: string, reviewerNote?: string) =>
     request<Database>(`/submissions/${id}/approve`, {

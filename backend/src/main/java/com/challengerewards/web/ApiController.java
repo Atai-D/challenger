@@ -143,17 +143,14 @@ public class ApiController {
     }
 
     @PostMapping("/challenges/{id}/join")
-    public ResponseEntity<StateResponse> join(@RequestHeader(value = "Authorization", required = false) String authHeader,
-                                              @PathVariable String id) {
+    public StateResponse join(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                              @PathVariable String id) {
         Session s = require(authHeader, Role.USER);
         String userId = s.subjectId();
-        Challenge c = challenges.findById(id).orElseThrow(this::notFound);
+        challenges.findById(id).orElseThrow(this::notFound);
+        // Joining is unlimited — capacity only limits reward submissions.
         boolean already = !participations.findByChallengeIdAndUserId(id, userId).isEmpty();
         if (!already) {
-            int taken = participations.findByChallengeId(id).size();
-            if (taken >= c.capacity) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(snapshot());
-            }
             Participation p = new Participation();
             p.id = uid("p");
             p.challengeId = id;
@@ -161,7 +158,7 @@ public class ApiController {
             p.joinedAt = System.currentTimeMillis();
             participations.save(p);
         }
-        return ResponseEntity.ok(snapshot());
+        return snapshot();
     }
 
     @PostMapping("/challenges/{id}/leave")
@@ -174,36 +171,42 @@ public class ApiController {
     }
 
     @PostMapping("/submissions")
-    public StateResponse submit(@RequestHeader(value = "Authorization", required = false) String authHeader,
-                                @RequestBody SubmitRequest req) {
+    public ResponseEntity<StateResponse> submit(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                                                 @RequestBody SubmitRequest req) {
         Session s = require(authHeader, Role.USER);
         String userId = s.subjectId();
         Challenge c = challenges.findById(req.challengeId()).orElseThrow(this::notFound);
 
-        boolean already = !participations.findByChallengeIdAndUserId(req.challengeId(), userId).isEmpty();
-        if (!already) {
-            int taken = participations.findByChallengeId(req.challengeId()).size();
-            if (taken < c.capacity) {
-                Participation p = new Participation();
-                p.id = uid("p");
-                p.challengeId = req.challengeId();
-                p.userId = userId;
-                p.joinedAt = System.currentTimeMillis();
-                participations.save(p);
-            }
+        // A reward slot is consumed per distinct participant who submits.
+        List<Submission> existing = submissions.findByChallengeId(req.challengeId());
+        boolean alreadySubmitted = existing.stream().anyMatch(x -> userId.equals(x.userId));
+        long submitters = existing.stream().map(x -> x.userId).distinct().count();
+        if (!alreadySubmitted && submitters >= c.capacity) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(snapshot());
+        }
+
+        // Ensure the user is recorded as a participant (no capacity limit on joining).
+        boolean joined = !participations.findByChallengeIdAndUserId(req.challengeId(), userId).isEmpty();
+        if (!joined) {
+            Participation p = new Participation();
+            p.id = uid("p");
+            p.challengeId = req.challengeId();
+            p.userId = userId;
+            p.joinedAt = System.currentTimeMillis();
+            participations.save(p);
         }
 
         Submission sub = new Submission();
         sub.id = uid("s");
         sub.challengeId = req.challengeId();
         sub.userId = userId;
-        sub.type = req.type();
+        sub.type = c.moderationType; // proof type is fixed by the challenge
         sub.note = req.note();
         sub.proofImage = req.proofImage();
         sub.status = SubmissionStatus.PENDING;
         sub.createdAt = System.currentTimeMillis();
         submissions.save(sub);
-        return snapshot();
+        return ResponseEntity.ok(snapshot());
     }
 
     @PostMapping("/submissions/{id}/approve")

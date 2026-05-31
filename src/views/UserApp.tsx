@@ -70,8 +70,8 @@ function ChallengeList({ onOpen }: { onOpen: (id: string) => void }) {
         {challenges.map((ch) => {
           const joined = store.isJoined(ch.id);
           const taken = store.spotsTaken(ch.id);
-          const left = store.spotsLeft(ch.id);
-          const full = left <= 0 && !joined;
+          const slotsLeft = store.spotsLeft(ch.id);
+          const full = slotsLeft <= 0;
           const daysRemaining = daysLeft(ch.endDate);
           const fillPct = (taken / ch.capacity) * 100;
           return (
@@ -94,12 +94,12 @@ function ChallengeList({ onOpen }: { onOpen: (id: string) => void }) {
               <div className="capacity-row">
                 <div className="capacity-head">
                   <span className="muted small">
-                    {taken}/{ch.capacity} spots filled
+                    {taken}/{ch.capacity} reward slots
                   </span>
                   {full ? (
-                    <Badge tone="danger">Full</Badge>
+                    <Badge tone="danger">Rewards gone</Badge>
                   ) : (
-                    <Badge tone="success">{left} left</Badge>
+                    <Badge tone="success">{slotsLeft} left</Badge>
                   )}
                 </div>
                 <Progress value={fillPct} />
@@ -141,11 +141,12 @@ function ChallengeDetail({
 
   const joined = store.isJoined(challenge.id);
   const taken = store.spotsTaken(challenge.id);
-  const spotsLeft = store.spotsLeft(challenge.id);
-  const full = spotsLeft <= 0 && !joined;
+  const slotsLeft = store.spotsLeft(challenge.id);
   const mySubs = store.db.submissions.filter(
     (s) => s.challengeId === challenge.id && s.userId === store.currentUserId,
   );
+  const hasSubmitted = mySubs.length > 0;
+  const rewardsFull = slotsLeft <= 0 && !hasSubmitted;
   const left = daysLeft(challenge.endDate);
 
   return (
@@ -176,7 +177,7 @@ function ChallengeDetail({
             </div>
           </div>
           <div>
-            <span className="muted small">Capacity</span>
+            <span className="muted small">Reward slots</span>
             <div className="meta-strong">
               {taken}/{challenge.capacity}
             </div>
@@ -185,26 +186,24 @@ function ChallengeDetail({
         <div className="capacity-row detail-capacity">
           <div className="capacity-head">
             <span className="muted small">
-              {taken} of {challenge.capacity} spots filled
+              {taken} of {challenge.capacity} reward slots claimed
             </span>
-            {spotsLeft > 0 ? (
-              <Badge tone="success">{spotsLeft} spots left</Badge>
+            {slotsLeft > 0 ? (
+              <Badge tone="success">{slotsLeft} left</Badge>
             ) : (
-              <Badge tone="danger">Full</Badge>
+              <Badge tone="danger">All rewards claimed</Badge>
             )}
           </div>
           <Progress value={(taken / challenge.capacity) * 100} />
         </div>
         <div className="detail-actions">
           {!joined ? (
-            <Button onClick={() => store.joinChallenge(challenge.id)} disabled={full}>
-              {full ? "Challenge full" : "Participate"}
-            </Button>
+            <Button onClick={() => store.joinChallenge(challenge.id)}>Participate</Button>
           ) : (
             <>
               <Badge tone="success">You're in! ✓</Badge>
-              <Button onClick={() => setShowSubmit((v) => !v)}>
-                {showSubmit ? "Close form" : "Submit proof"}
+              <Button onClick={() => setShowSubmit((v) => !v)} disabled={rewardsFull}>
+                {rewardsFull ? "Reward slots full" : showSubmit ? "Close form" : "Submit proof"}
               </Button>
               <Button variant="ghost" onClick={() => store.leaveChallenge(challenge.id)}>
                 Leave
@@ -213,12 +212,17 @@ function ChallengeDetail({
           )}
           {left <= 0 && <Badge tone="danger">Challenge ended</Badge>}
         </div>
+        {joined && rewardsFull && (
+          <p className="muted small hint">
+            All {challenge.capacity} reward slots have been claimed, so new submissions are closed.
+          </p>
+        )}
       </Card>
 
-      {joined && showSubmit && (
+      {joined && showSubmit && !rewardsFull && (
         <SubmitForm
           challengeId={challenge.id}
-          defaultType={challenge.moderationType}
+          proofType={challenge.moderationType}
           onDone={() => setShowSubmit(false)}
         />
       )}
@@ -253,15 +257,14 @@ function ChallengeDetail({
 
 function SubmitForm({
   challengeId,
-  defaultType,
+  proofType,
   onDone,
 }: {
   challengeId: string;
-  defaultType: ModerationType;
+  proofType: ModerationType;
   onDone: () => void;
 }) {
   const store = useStore();
-  const [type, setType] = useState<ModerationType>(defaultType);
   const [note, setNote] = useState("");
   const [proofImage, setProofImage] = useState<string | undefined>();
 
@@ -273,26 +276,19 @@ function SubmitForm({
 
   const submit = () => {
     if (!note.trim() && !proofImage) return;
-    store.submitProof({ challengeId, type, note: note.trim(), proofImage });
+    store.submitProof({ challengeId, note: note.trim(), proofImage });
     onDone();
   };
 
   return (
     <Card className="form-card">
       <h3>Submit proof of completion</h3>
-      <label className="field-label">Proof type</label>
-      <div className="seg">
-        {(Object.keys(MODERATION_LABELS) as ModerationType[]).map((t) => (
-          <button
-            key={t}
-            className={`seg-btn ${type === t ? "seg-active" : ""}`}
-            onClick={() => setType(t)}
-          >
-            {MODERATION_LABELS[t]}
-          </button>
-        ))}
+      <label className="field-label">Required proof</label>
+      <div className="proof-type">
+        <ModerationBadge type={proofType} />
+        <span className="muted small">set by the organizer</span>
       </div>
-      <p className="muted small hint">{MODERATION_HINTS[type]}</p>
+      <p className="muted small hint">{MODERATION_HINTS[proofType]}</p>
       <label className="field-label">Note</label>
       <textarea
         className="input"

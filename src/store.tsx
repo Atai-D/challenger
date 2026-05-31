@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { api, setToken, getToken, type ActionResult } from "./api";
-import type { Challenge, Database, ModerationType, Role, Session } from "./types";
+import type { Challenge, Database, Role, Session } from "./types";
 
 const EMPTY_DB: Database = {
   users: [],
@@ -63,7 +63,6 @@ interface StoreValue {
   leaveChallenge: (challengeId: string) => Promise<void>;
   submitProof: (input: {
     challengeId: string;
-    type: ModerationType;
     note: string;
     proofImage?: string;
   }) => Promise<void>;
@@ -171,7 +170,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const submitProof = useCallback(
-    async (input: { challengeId: string; type: ModerationType; note: string; proofImage?: string }) => {
+    async (input: { challengeId: string; note: string; proofImage?: string }) => {
       setDb(await api.submit(input));
     },
     [],
@@ -231,20 +230,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [db.participations, currentUserId],
   );
 
+  // A reward slot is consumed per distinct participant who submits proof.
   const spotsTaken = useCallback(
     (challengeId: string) =>
-      db.participations.filter((p) => p.challengeId === challengeId).length,
-    [db.participations],
+      new Set(
+        db.submissions.filter((s) => s.challengeId === challengeId).map((s) => s.userId),
+      ).size,
+    [db.submissions],
   );
 
   const spotsLeft = useCallback(
     (challengeId: string) => {
       const challenge = db.challenges.find((c) => c.id === challengeId);
       if (!challenge) return 0;
-      const taken = db.participations.filter((p) => p.challengeId === challengeId).length;
+      const taken = new Set(
+        db.submissions.filter((s) => s.challengeId === challengeId).map((s) => s.userId),
+      ).size;
       return Math.max(0, challenge.capacity - taken);
     },
-    [db.challenges, db.participations],
+    [db.challenges, db.submissions],
   );
 
   const orgStats = useMemo<OrgStats>(() => {

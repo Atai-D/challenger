@@ -136,7 +136,8 @@ function ChallengesManager() {
 
       <div className="grid grid-challenges">
         {orgChallenges.map((ch) => {
-          const participants = store.spotsTaken(ch.id);
+          const joinedCount = store.db.participations.filter((p) => p.challengeId === ch.id).length;
+          const slotsUsed = store.spotsTaken(ch.id);
           const subs = store.db.submissions.filter((s) => s.challengeId === ch.id);
           const left = daysLeft(ch.endDate);
           return (
@@ -158,7 +159,7 @@ function ChallengesManager() {
               <div className="capacity-row">
                 <div className="capacity-head">
                   <span className="muted small">
-                    {participants}/{ch.capacity} spots · {subs.length} submissions
+                    {slotsUsed}/{ch.capacity} reward slots · {joinedCount} joined · {subs.length} submissions
                   </span>
                   {left > 0 ? (
                     <Badge tone="neutral">{left}d left</Badge>
@@ -166,7 +167,7 @@ function ChallengesManager() {
                     <Badge tone="danger">Ended</Badge>
                   )}
                 </div>
-                <Progress value={(participants / ch.capacity) * 100} />
+                <Progress value={(slotsUsed / ch.capacity) * 100} />
               </div>
               <div className="challenge-foot">
                 <span className="muted small">
@@ -282,7 +283,7 @@ function CreateChallengeForm({ onDone }: { onDone: () => void }) {
           />
         </div>
         <div>
-          <label className="field-label">Capacity (max participants)</label>
+          <label className="field-label">Reward slots (max winners)</label>
           <input
             className="input"
             type="number"

@@ -40,7 +40,6 @@ public final class Dtos {
 
     public record SubmitRequest(
             String challengeId,
-            ModerationType type,
             String note,
             String proofImage) {}
 
