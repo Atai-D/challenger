@@ -33,7 +33,6 @@ export interface UserStats {
   submitted: number;
   approved: number;
   pending: number;
-  points: number;
   activeCoupons: number;
 }
 
@@ -185,7 +184,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           category: input.category,
           moderationType: input.moderationType,
           rewardLabel: input.rewardLabel,
-          points: input.points,
           capacity: input.capacity,
           startDate: input.startDate,
           endDate: input.endDate,
@@ -284,14 +282,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const mySubs = db.submissions.filter((s) => s.userId === currentUserId);
     const approved = mySubs.filter((s) => s.status === "APPROVED");
     const pending = mySubs.filter((s) => s.status === "PENDING").length;
-    const points = approved.reduce((sum, s) => {
-      const ch = db.challenges.find((c) => c.id === s.challengeId);
-      return sum + (ch?.points ?? 0);
-    }, 0);
     const activeCoupons = db.coupons.filter(
       (c) => c.userId === currentUserId && c.status === "ACTIVE",
     ).length;
-    return { joined, submitted: mySubs.length, approved: approved.length, pending, points, activeCoupons };
+    return { joined, submitted: mySubs.length, approved: approved.length, pending, activeCoupons };
   }, [db, currentUserId]);
 
   const adminStats = useMemo<AdminStats>(() => {

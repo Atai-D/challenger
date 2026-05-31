@@ -22,7 +22,6 @@ public class Challenge {
     @Enumerated(EnumType.STRING)
     public ModerationType moderationType;
     public String rewardLabel;
-    public int points;
     public int capacity;
     public String startDate;
     public String endDate;

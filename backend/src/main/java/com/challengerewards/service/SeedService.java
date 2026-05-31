@@ -84,19 +84,19 @@ public class SeedService implements CommandLineRunner {
 
         challenges.save(challenge("ch-run", "Morning Run 5K",
                 "Run 5 kilometers any morning this week and earn a free signature latte. Share your route to inspire others!",
-                "Fitness", ModerationType.STRAVA, "Free Signature Latte", 50, 100,
+                "Fitness", ModerationType.STRAVA, "Free Signature Latte", 100,
                 iso(-3), iso(11), now - 3 * DAY, ChallengeStatus.APPROVED, now - 3 * DAY));
         challenges.save(challenge("ch-tasting", "Coffee Tasting Night",
                 "Join us in-store for a guided tasting of three single-origin beans. Check in at the event to claim your reward.",
-                "Event", ModerationType.CHECKIN, "20% Off Any Beans", 30, 12,
+                "Event", ModerationType.CHECKIN, "20% Off Any Beans", 12,
                 iso(-1), iso(6), now - 2 * DAY, ChallengeStatus.APPROVED, now - 2 * DAY));
         challenges.save(challenge("ch-cup", "Bring Your Own Cup Week",
                 "Use a reusable cup for any drink and snap a photo. Go green and grab a tasty pastry on us.",
-                "Sustainability", ModerationType.MANUAL, "Free Pastry", 20, 50,
+                "Sustainability", ModerationType.MANUAL, "Free Pastry", 50,
                 iso(-5), iso(9), now - 5 * DAY, ChallengeStatus.APPROVED, now - 5 * DAY));
         challenges.save(challenge("ch-sprint", "Rooftop Midnight Sprint",
                 "Race up the parking-garage rooftop at midnight for a double-shot espresso. Submitted for safety review.",
-                "Fitness", ModerationType.STRAVA, "Free Double Espresso", 40, 20,
+                "Fitness", ModerationType.STRAVA, "Free Double Espresso", 20,
                 iso(0), iso(7), now - 4 * 60 * 60 * 1000, ChallengeStatus.PENDING_REVIEW, null));
 
         participations.save(participation("p-1", "ch-run", "user-mia", now - 2 * DAY));
@@ -138,7 +138,7 @@ public class SeedService implements CommandLineRunner {
     }
 
     private Challenge challenge(String id, String title, String description, String category,
-                                ModerationType type, String reward, int points, int capacity,
+                                ModerationType type, String reward, int capacity,
                                 String start, String end, long createdAt,
                                 ChallengeStatus status, Long reviewedAt) {
         Challenge c = new Challenge();
@@ -149,7 +149,6 @@ public class SeedService implements CommandLineRunner {
         c.category = category;
         c.moderationType = type;
         c.rewardLabel = reward;
-        c.points = points;
         c.capacity = capacity;
         c.startDate = start;
         c.endDate = end;

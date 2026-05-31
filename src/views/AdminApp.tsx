@@ -109,7 +109,6 @@ function ReviewCard({ challengeId }: { challengeId: string }) {
           <span>
             🗓️ {formatDate(c.startDate)} – {formatDate(c.endDate)}
           </span>
-          <span>⭐ {c.points} pts</span>
         </div>
       </div>
 

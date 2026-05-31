@@ -40,7 +40,11 @@ export function UserApp() {
         active={tab}
         onChange={setTab}
         tabs={[
-          { id: "challenges", label: "Challenges", count: store.db.challenges.length },
+          {
+            id: "challenges",
+            label: "Challenges",
+            count: store.db.challenges.filter((c) => c.status === "APPROVED").length,
+          },
           { id: "profile", label: "My Profile", count: store.userStats.activeCoupons },
         ]}
       />
@@ -89,7 +93,6 @@ function ChallengeList({ onOpen }: { onOpen: (id: string) => void }) {
               <div className="reward-row">
                 <span className="gift">🎁</span>
                 <span>{ch.rewardLabel}</span>
-                <span className="points-pill">+{ch.points} pts</span>
               </div>
               <div className="capacity-row">
                 <div className="capacity-head">
@@ -165,10 +168,6 @@ function ChallengeDetail({
           <div>
             <span className="muted small">Reward</span>
             <div className="meta-strong">🎁 {challenge.rewardLabel}</div>
-          </div>
-          <div>
-            <span className="muted small">Points</span>
-            <div className="meta-strong">+{challenge.points}</div>
           </div>
           <div>
             <span className="muted small">Window</span>
@@ -342,17 +341,17 @@ function UserProfile() {
         <Avatar text={user?.avatar ?? "?"} tone="user" />
         <div>
           <h2>{user?.name}</h2>
-          <p className="muted">Challenge hunter · {stats.points} reward points</p>
+          <p className="muted">Challenge hunter · {stats.activeCoupons} active coupons</p>
         </div>
       </div>
 
       <div className="grid grid-stats">
-        <StatCard icon="🏆" label="Points earned" value={stats.points} />
         <StatCard icon="🎯" label="Challenges joined" value={stats.joined} />
         <StatCard icon="✅" label="Approved proofs" value={stats.approved} />
         <StatCard icon="⏳" label="Pending review" value={stats.pending} />
         <StatCard icon="🎟️" label="Active coupons" value={stats.activeCoupons} />
         <StatCard icon="📨" label="Total submissions" value={stats.submitted} />
+        <StatCard icon="🏅" label="Rewards earned" value={stats.approved} />
       </div>
 
       <h3 className="section-title">My coupons</h3>

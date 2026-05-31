@@ -43,16 +43,16 @@ function Header() {
             </div>
           </div>
           <button
-            className="reset-btn"
+            className="icon-btn"
             title="Reset demo data"
             onClick={() => {
               if (confirm("Reset all demo data to defaults?")) store.reset();
             }}
           >
-            ↺ Reset
+            ↺
           </button>
-          <button className="reset-btn" title="Sign out" onClick={() => store.logout()}>
-            ⎋ Logout
+          <button className="icon-btn" title="Sign out" onClick={() => store.logout()}>
+            ⎋
           </button>
         </div>
       </div>

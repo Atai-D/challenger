@@ -31,7 +31,6 @@ public final class Dtos {
             String category,
             ModerationType moderationType,
             String rewardLabel,
-            int points,
             int capacity,
             String startDate,
             String endDate) {}

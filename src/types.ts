@@ -38,7 +38,6 @@ export interface Challenge {
   category: string;
   moderationType: ModerationType;
   rewardLabel: string;
-  points: number;
   capacity: number;
   startDate: string;
   endDate: string;

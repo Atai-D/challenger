@@ -108,7 +108,6 @@ public class ApiController {
         c.category = req.category();
         c.moderationType = req.moderationType();
         c.rewardLabel = req.rewardLabel();
-        c.points = req.points();
         c.capacity = req.capacity();
         c.startDate = req.startDate();
         c.endDate = req.endDate();

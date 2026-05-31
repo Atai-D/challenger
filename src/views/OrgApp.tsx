@@ -32,7 +32,11 @@ export function OrgApp() {
         onChange={setTab}
         tabs={[
           { id: "dashboard", label: "Dashboard" },
-          { id: "challenges", label: "Challenges", count: store.db.challenges.length },
+          {
+            id: "challenges",
+            label: "Challenges",
+            count: store.db.challenges.filter((c) => c.orgId === store.currentOrgId).length,
+          },
           { id: "moderation", label: "Moderation", count: pending },
           { id: "redeem", label: "Redeem" },
         ]}
@@ -151,7 +155,6 @@ function ChallengesManager() {
               <div className="reward-row">
                 <span className="gift">🎁</span>
                 <span>{ch.rewardLabel}</span>
-                <span className="points-pill">+{ch.points} pts</span>
               </div>
               {ch.status === "REJECTED" && ch.reviewerNote && (
                 <div className="reviewer-note">Platform: {ch.reviewerNote}</div>
@@ -197,7 +200,6 @@ function CreateChallengeForm({ onDone }: { onDone: () => void }) {
   const [category, setCategory] = useState("Fitness");
   const [moderationType, setModerationType] = useState<ModerationType>("STRAVA");
   const [rewardLabel, setRewardLabel] = useState("");
-  const [points, setPoints] = useState(30);
   const [capacity, setCapacity] = useState(50);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(in14);
@@ -212,7 +214,6 @@ function CreateChallengeForm({ onDone }: { onDone: () => void }) {
       category,
       moderationType,
       rewardLabel: rewardLabel.trim(),
-      points,
       capacity,
       startDate,
       endDate,
@@ -271,28 +272,14 @@ function CreateChallengeForm({ onDone }: { onDone: () => void }) {
         value={rewardLabel}
         onChange={(e) => setRewardLabel(e.target.value)}
       />
-      <div className="form-grid">
-        <div>
-          <label className="field-label">Points</label>
-          <input
-            className="input"
-            type="number"
-            min={0}
-            value={points}
-            onChange={(e) => setPoints(Number(e.target.value))}
-          />
-        </div>
-        <div>
-          <label className="field-label">Reward slots (max winners)</label>
-          <input
-            className="input"
-            type="number"
-            min={1}
-            value={capacity}
-            onChange={(e) => setCapacity(Number(e.target.value))}
-          />
-        </div>
-      </div>
+      <label className="field-label">Reward slots (max winners)</label>
+      <input
+        className="input"
+        type="number"
+        min={1}
+        value={capacity}
+        onChange={(e) => setCapacity(Number(e.target.value))}
+      />
       <div className="form-grid">
         <div>
           <label className="field-label">Start date</label>
